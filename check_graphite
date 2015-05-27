@@ -60,8 +60,12 @@ optparse = OptionParser.new do |opts|
     @@options[:zero_on_error] = zero_on_error
   end
   @@options[:link_graph] = false
-  opts.on("-l", "--link-graph", "Add a link in the plugin output, showing a 24h graph for this metric in graphite. Requires 'escape_html_tags=0' option in cgi.cfg nagios config file") do |link_graph|
+  opts.on("-l", "--link-graph \[true \| false]", "Add a link in the plugin output, showing a 24h graph for this metric in graphite. Requires 'escape_html_tags=0' option in cgi.cfg nagios config file") do |link_graph|
     @@options[:link_graph] = link_graph
+  end
+  @@options[:line_mode] = "connected"
+  opts.on("-L","--line-mode \[connected \| staircase]", "Specify lineMode of linked graph (default: connected). Consult Graphite URL API documentation for other lineMode") do |line_mode|
+    @@options[:line_mode] = line_mode
   end
   opts.on( "-h", "--help", "Display this screen" ) do
     puts opts
@@ -87,10 +91,11 @@ end
 def output_url
   base_url = @@options[:url]
   metric = @@options[:metric]
-  if @@options[:link_graph]  
-    "<a target=\"_blank\" href=\"http://" + base_url + "/render/?target=" + URI.escape(metric) + "&from=-24h&width=700&height=450\"> 24h graph </a>"
+  line_mode = @@options[:line_mode]
+  if @@options[:link_graph]
+    "<a target=\"_blank\" href=\"http://" + base_url + "/render/?target=" + URI.escape(metric) + "&lineMode=" + line_mode + "&from=-24h&width=700&height=450\"> 24h graph </a>"
   end
-end  
+end
 
 
 data = {}
