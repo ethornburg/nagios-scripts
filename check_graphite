@@ -32,7 +32,7 @@ optparse = OptionParser.new do |opts|
     @@options[:start_duration] = start_duration
   end
   @@options[:end_duration] = 0
-  opt.on("-E", "--duration_end LENGTH", "Until Duration Length, in relative minutes of data to parse (dafulat: 0)") do |end_duration|
+  opts.on("-E", "--duration_end LENGTH", "Until Duration Length, in relative minutes of data to parse (dafulat: 0)") do |end_duration|
     @@options[:end_duration] = end_duration
   end
   @@options[:function] = "average"
@@ -109,6 +109,9 @@ begin
         unless (point[0].nil?)
           data["#{cache['target']}"] += point[0]
           count += 1
+          if (@@options[:function] == "max")
+            data["total"] = [data["total"], data["#{cache['target']}"]].max
+          end
         end
       end
       if (count == 0)
@@ -116,10 +119,7 @@ begin
       end
       if (@@options[:function] == "average")
         data["#{cache['target']}"] /= count
-      end
-      if (@@options[:function] == "max")
-        data["total"] = [data["total"], data["#{cache['target']}"]].max
-      end
+        data["total"] += data["#{cache['target']}"]
       else
         data["total"] += data["#{cache['target']}"]
       end
@@ -161,4 +161,3 @@ else
     exit EXIT_OK
   end
 end
-
