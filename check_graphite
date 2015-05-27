@@ -102,7 +102,8 @@ data = {}
 data["total"] = 0
 
 begin
-  response = JSON.parse(RestClient.get(URI.encode(url)))
+  raw_response = RestClient.get(URI.encode(url))
+  response = JSON.parse(raw_response)
   if response.empty?
     puts "UNKNOWN no data reported by Graphite"
     exit EXIT_UNKNOWN
