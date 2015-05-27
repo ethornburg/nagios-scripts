@@ -27,12 +27,16 @@ optparse = OptionParser.new do |opts|
   opts.on("-s", "--shortname SHORTNAME", "Metric short name (used for performance data)") do |shortname|
     @@options[:shortname] = shortname
   end
-  @@options[:duration] = 5
-  opts.on("-d", "--duration LENGTH", "Length, in minute of data to parse (default: 5)") do |duration|
-    @@options[:duration] = duration
+  @@options[:start_duration] = 5
+  opts.on("-S", "--duration_start LENGTH", "From Duration Length, in minute of data to parse (default: 5)") do |start_duration|
+    @@options[:start_duration] = start_duration
+  end
+  @@options[:end_duration] = 0
+  opt.on("-E", "--duration_end LENGTH", "Until Duration Length, in relative minutes of data to parse (dafulat: 0)") do |end_duration|
+    @@options[:end_duration] = end_duration
   end
   @@options[:function] = "average"
-  opts.on("-f", "--function \[average \| sum\]", "Function applied to metrics for thresholds (default: average)") do |function|
+  opts.on("-f", "--function \[average \| sum\ \| max]", "Function applied to metrics for thresholds (default: average)") do |function|
     @@options[:function] = function
   end
   @@options[:warning] = nil
@@ -75,8 +79,9 @@ end
 def url
   base_url = @@options[:url]
   metric = @@options[:metric]
-  duration = @@options[:duration].to_s
-  base_url + "/render/?target=" + metric + "&format=json&from=-" + duration + "mins"
+  start_duration = @@options[:start_duration].to_s
+  end_duration = @@options[:end_duration].to_s
+  base_url + "/render/?target=" + metric + "&format=json&from=-" + start_duration + "mins" + "&until=-" + end_duration + "mins"
 end
 
 def output_url
@@ -112,7 +117,12 @@ begin
       if (@@options[:function] == "average")
         data["#{cache['target']}"] /= count
       end
-      data["total"] += data["#{cache['target']}"]
+      if (@@options[:function] == "max")
+        data["total"] = [data["total"], data["#{cache['target']}"]].max
+      end
+      else
+        data["total"] += data["#{cache['target']}"]
+      end
     end
   end
 rescue RestClient::InternalServerError
